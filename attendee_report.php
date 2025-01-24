@@ -31,12 +31,15 @@ if (isset($_POST['event_id']) && !empty($_POST['event_id'])) {
         if (isset($_POST['ajax']) && $_POST['ajax'] == 1) {
             if (!empty($attendees)) {
                 foreach ($attendees as $attendee) {
+                    $datetime = new DateTime($attendee['registered_at'], new DateTimeZone('UTC'));
+                    $datetime->setTimezone(new DateTimeZone('Asia/Dhaka'));
                     echo '<tr>';
                     echo '<td>' . htmlspecialchars($attendee['attendee_name']) . '</td>';
                     echo '<td>' . htmlspecialchars($attendee['attendee_email']) . '</td>';
-                    echo '<td>' . htmlspecialchars($attendee['registered_at']) . '</td>';
+                    echo '<td>' . htmlspecialchars($datetime->format('Y-m-d g:i A')) . '</td>';
                     echo '</tr>';
                 }
+
             } else {
                 echo '<tr><td colspan="3" class="text-center">No attendees found.</td></tr>';
             }
@@ -121,6 +124,10 @@ if (isset($_POST['event_id']) && !empty($_POST['event_id'])) {
     </div>
 </div>
 
+
+<?php include('footer.php'); ?>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
@@ -159,5 +166,3 @@ if (isset($_POST['event_id']) && !empty($_POST['event_id'])) {
         });
     });
 </script>
-
-<?php include('footer.php'); ?>
