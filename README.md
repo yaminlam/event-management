@@ -15,7 +15,7 @@ This is a Event Management System built using PHP and MySQL. It allows users to 
 - **PHP**: Server-side scripting for application logic.
 - **MySQL**: Database management system for storing event and user data.
 - **HTML/CSS/Bootstrap**: Front-end styling and responsive design.
-- **AJAX**: For smooth dynamic interactions (optional if implemented).
+- **AJAX**: For smooth dynamic interactions.
 - **GitHub**: Version control and collaboration.
 
 ## Installation Instructions
