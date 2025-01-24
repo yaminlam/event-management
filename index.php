@@ -13,7 +13,7 @@ $sortBy = isset($_GET['sort']) ? $_GET['sort'] : 'name';
 $sortOrder = isset($_GET['order']) && $_GET['order'] == 'desc' ? 'DESC' : 'ASC';
 
 try {
-    $query = $conn->prepare("SELECT * FROM events WHERE name LIKE :search OR description LIKE :search ORDER BY $sortBy $sortOrder LIMIT :offset, :perPage");
+    $query = $conn->prepare("SELECT * FROM events WHERE name LIKE :search ORDER BY $sortBy $sortOrder LIMIT :offset, :perPage");
     $query->bindValue(':search', "%$search%", PDO::PARAM_STR);
     $query->bindValue(':offset', $offset, PDO::PARAM_INT);
     $query->bindValue(':perPage', $perPage, PDO::PARAM_INT);
@@ -448,6 +448,8 @@ try {
                     success: function (response) {
                         if (response.success) {
                             $('tr[data-id="' + eventId + '"]').remove();
+                            location.reload()
+                                ;
                         } else {
                             alert('Failed to delete event');
                         }
