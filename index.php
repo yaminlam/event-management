@@ -29,6 +29,19 @@ try {
     echo "Error: " . $e->getMessage();
     exit();
 }
+
+try {
+    $querys = $conn->prepare("SELECT e.id, e.name, e.capacity, 
+                             (e.capacity - COUNT(ar.id)) AS available_capacity
+                             FROM events e
+                             LEFT JOIN attendee_registrations ar ON e.id = ar.event_id
+                             GROUP BY e.id");
+    $querys->execute();
+    $attendees_events = $querys->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "Error: " . $e->getMessage();
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,7 +64,13 @@ try {
 </head>
 
 <body>
-    <!-- Navbar -->
+    <?php if (isset($_SESSION['message'])): ?>
+        <div class="alert alert-<?php echo $_SESSION['message_type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['message']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+    <?php endif; ?>
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="#">Event Management</a>
@@ -66,13 +85,15 @@ try {
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">Event List</h2>
             <div>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
                     <i class="fa fa-plus-circle me-2"></i>Add Event
+                </button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#attendeeRegistrationModal">
+                    <i class="fa fa-plus-circle me-2"></i>Register Attendee
                 </button>
                 <a href="attendee_report.php" class="btn btn-info ms-2">
                     <i class="fa fa-download me-2"></i>Download Report
@@ -263,9 +284,83 @@ try {
         </div>
     </div>
 
+
+    <!-- Attendee Registration Modal -->
+    <div class="modal fade" id="attendeeRegistrationModal" tabindex="-1"
+        aria-labelledby="attendeeRegistrationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="attendeeRegistrationModalLabel">Event Registration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registrationForm" method="POST" action="register_attendee.php">
+                        <div class="mb-3">
+                            <label for="event" class="form-label">Select Event:</label>
+                            <select id="eventDropdown" name="event_id" class="form-select" required>
+                                <option value="">--Select an Event--</option>
+                                <?php foreach ($attendees_events as $event): ?>
+                                    <option value="<?= $event['id'] ?>" data-capacity="<?= $event['available_capacity'] ?>">
+                                        <?= htmlspecialchars($event['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span id="availableCapacity" class="text-muted mt-2 d-block"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" id="name" name="attendee_name" class="form-control"
+                                placeholder="Enter your name" required readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="attendee_email" class="form-control"
+                                placeholder="Enter your email" required readonly>
+                        </div>
+                        <button type="submit" id="submitBtn" class="btn btn-primary w-100" disabled>Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        document.querySelectorAll('.registerAttendee').forEach(button => {
+            button.addEventListener('click', function () {
+                const eventId = this.getAttribute('data-id');
+                const eventName = this.getAttribute('data-name');
+                const availableCapacity = this.getAttribute('data-capacity');
+
+                document.getElementById('event_id').value = eventId;
+                document.getElementById('event_name').value = eventName;
+                document.getElementById('available_capacity').value = availableCapacity;
+            });
+        });
+
+        $(document).ready(function () {
+            $('#eventDropdown').on('change', function () {
+                const selectedEvent = $(this).find(':selected');
+                const availableCapacity = selectedEvent.data('capacity');
+
+                if (availableCapacity === undefined || availableCapacity === null) {
+                    $('#availableCapacity').text('No available capacity information.');
+                    $('#name, #email').prop('readonly', true);
+                    $('#submitBtn').prop('disabled', true);
+                } else if (availableCapacity > 0) {
+                    $('#availableCapacity').text(`Available Capacity: ${availableCapacity}`);
+                    $('#name, #email').prop('readonly', false);
+                    $('#submitBtn').prop('disabled', false);
+                } else {
+                    $('#availableCapacity').text('Event is full.');
+                    $('#name, #email').prop('readonly', true);
+                    $('#submitBtn').prop('disabled', true);
+                }
+            });
+        });
 
 
         $(document).on("click", ".viewEvent", function () {

@@ -1,9 +1,9 @@
 <?php
-include 'db.php'; // Ensure db.php doesn't output anything
+
+include 'db.php';
 
 header('Content-Type: application/json');
 
-// Your script logic here
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         $eventId = $_POST['id'];

@@ -2,16 +2,12 @@
 session_start();
 include 'db.php';
 
-// Display session message
-$message = '';
-if (isset($_SESSION['message'])) {
-    $message = $_SESSION['message'];
-    $messageType = $_SESSION['message_type'] ?? 'danger';
-    unset($_SESSION['message'], $_SESSION['message_type']);
+if (isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
 }
 
 try {
-    // Fetch event details with available capacity
     $query = $conn->prepare("SELECT e.id, e.name, e.capacity, 
                              (e.capacity - COUNT(ar.id)) AS available_capacity
                              FROM events e
@@ -24,7 +20,6 @@ try {
     exit();
 }
 
-// Handle login form submission
 $emailErr = $passwordErr = $email = $password = "";
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
     if (empty($_POST['email'])) {
@@ -64,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -121,10 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
             font-size: 0.9rem;
         }
 
-        .wrapper {
-            padding: 20px;
-        }
-
         @media (max-width: 768px) {
             .container {
                 margin-top: 20px;
@@ -134,103 +124,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
 </head>
 
 <body>
+    <?php if (isset($_SESSION['message'])): ?>
+        <div class="alert alert-<?php echo $_SESSION['message_type']; ?> alert-dismissible fade show" role="alert">
+            <?php echo htmlspecialchars($_SESSION['message']); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php unset($_SESSION['message'], $_SESSION['message_type']); ?>
+    <?php endif; ?>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8 col-sm-12">
                 <h1 class="text-center mb-4">Event Management System</h1>
-                <ul class="nav nav-tabs justify-content-center mb-3" id="myTab" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="login-tab" data-bs-toggle="tab" href="#login" role="tab">Login as
-                            User</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="attendee-tab" data-bs-toggle="tab" href="#attendee" role="tab">Register
-                            for Event</a>
-                    </li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="login" role="tabpanel">
-                        <div class="card p-4">
-                            <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control" placeholder="Enter email"
-                                        value="<?php echo htmlspecialchars($email); ?>" required>
-                                    <small class="text-danger"><?php echo $emailErr; ?></small>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input type="password" name="password" class="form-control" placeholder="Password"
-                                        required>
-                                    <small class="text-danger"><?php echo $passwordErr; ?></small>
-                                </div>
-                                <button type="submit" name="login" class="btn btn-primary w-100">Login</button>
-                                <div class="text-center mt-3">
-                                    <a href="register.php" class="text-primary">Sign Up</a>
-                                </div>
-                            </form>
+                <div class="card p-4">
+                    <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="Enter email"
+                                value="<?php echo htmlspecialchars($email); ?>" required>
+                            <small class="text-danger"><?php echo $emailErr; ?></small>
                         </div>
-                    </div>
-                    <div class="tab-pane fade" id="attendee" role="tabpanel">
-                        <div class="card p-4">
-                            <form id="registrationForm" method="POST" action="register_attendee.php">
-                                <div class="mb-3">
-                                    <label for="event" class="form-label">Select Event:</label>
-                                    <select id="eventDropdown" name="event_id" class="form-select" required>
-                                        <option value="">--Select an Event--</option>
-                                        <?php foreach ($events as $event): ?>
-                                            <option value="<?= $event['id'] ?>"
-                                                data-capacity="<?= $event['available_capacity'] ?>">
-                                                <?= htmlspecialchars($event['name']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <span id="availableCapacity" class="text-muted mt-2 d-block"></span>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Name</label>
-                                    <input type="text" id="name" name="attendee_name" class="form-control"
-                                        placeholder="Enter your name" required readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" id="email" name="attendee_email" class="form-control"
-                                        placeholder="Enter your email" required readonly>
-                                </div>
-                                <button type="submit" id="submitBtn" class="btn btn-primary w-100"
-                                    disabled>Register</button>
-                            </form>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" placeholder="Password" required>
+                            <small class="text-danger"><?php echo $passwordErr; ?></small>
                         </div>
-                    </div>
+                        <button type="submit" name="login" class="btn btn-primary w-100">Login</button>
+                        <div class="text-center mt-3">
+                            <a href="register.php" class="text-primary">Sign Up</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#eventDropdown').on('change', function () {
-                const selectedEvent = $(this).find(':selected');
-                const availableCapacity = selectedEvent.data('capacity');
-
-                if (availableCapacity === undefined || availableCapacity === null) {
-                    $('#availableCapacity').text('No available capacity information.');
-                    $('#name, #email').prop('readonly', true);
-                    $('#submitBtn').prop('disabled', true);
-                } else if (availableCapacity > 0) {
-                    $('#availableCapacity').text(`Available Capacity: ${availableCapacity}`);
-                    $('#name, #email').prop('readonly', false);
-                    $('#submitBtn').prop('disabled', false);
-                } else {
-                    $('#availableCapacity').text('Event is full.');
-                    $('#name, #email').prop('readonly', true);
-                    $('#submitBtn').prop('disabled', true);
-                }
-            });
-        });
-    </script>
 </body>
 
 </html>

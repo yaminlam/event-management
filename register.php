@@ -1,8 +1,7 @@
 <?php
 ob_start();
 
-session_start(); // Start the session at the very top
-
+session_start();
 include 'db.php';
 
 if (isset($_SESSION['email'])) {
@@ -13,25 +12,18 @@ if (isset($_SESSION['email'])) {
 $nameErr = $emailErr = $passwordErr = $confirmPasswordErr = $username = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Initialize validation flags
     $valid = true;
-
-    // Validate username
     if (empty($_POST["username"])) {
         $nameErr = "Username is required";
         $valid = false;
     } else {
         $username = $_POST['username'];
     }
-
-    // Validate email
     if (empty($_POST["email"])) {
         $emailErr = "Email is required";
         $valid = false;
     } else {
         $email = $_POST['email'];
-
-        // Check if email already exists in the database
         $stmt = $conn->prepare("SELECT * FROM users WHERE email = :email");
         $stmt->bindParam(':email', $email);
         $stmt->execute();
@@ -43,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Validate password
     if (empty($_POST["password"])) {
         $passwordErr = "Password is required";
         $valid = false;
@@ -51,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $password = $_POST['password'];
     }
 
-    // Validate confirm password
     if (empty($_POST["confirm_password"])) {
         $confirmPasswordErr = "Confirm password is required";
         $valid = false;
@@ -60,29 +50,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $valid = false;
     }
 
-    // Proceed if validation is successful
     if ($valid) {
-        // Hash the password
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         try {
-            // Prepare the SQL query to insert the new user
             $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hashed_password')";
             $conn->exec($sql);
 
-            // Set a success message in the session
             $_SESSION['message'] = 'Registration successful! You can now log in.';
-            $_SESSION['message_type'] = 'success';  // Set the message type
+            $_SESSION['message_type'] = 'success';
 
-            // Redirect to login page
             header("Location: login.php");
-            exit();  // Ensure no further code is executed after the redirect
+            exit();
         } catch (PDOException $e) {
-            // Set error message in session
             $_SESSION['message'] = 'Error: ' . $e->getMessage();
-            $_SESSION['message_type'] = 'danger';  // Set the message type
-
-            // Redirect back to the registration page
+            $_SESSION['message_type'] = 'danger';
             header("Location: register.php");
             exit();
         }

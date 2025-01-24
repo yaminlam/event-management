@@ -1,9 +1,9 @@
 <?php
-$servername = "127.0.0.1"; // Use IP to bypass socket issues
+$servername = "127.0.0.1";
 $username = "root";
 $password = "";
 $dbname = "event_management";
-$port = "3307"; // Add the correct port
+$port = "3307";
 
 try {
   $conn = new PDO("mysql:host=$servername;port=$port;dbname=$dbname", $username, $password);

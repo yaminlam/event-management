@@ -1,4 +1,3 @@
-<!-- footer.php -->
 <footer class="footer bg-light text-white py-3 mt-4 fixed-bottom">
     <div class="container text-dark text-center">
         <p class="mb-0">&copy; Md. Yamin Lam Bappi</p>
